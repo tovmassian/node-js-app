@@ -1,6 +1,6 @@
-const fs = require('fs');
 const path = require('path');
 const Sequelize = require('sequelize');
+const { componentsGetter } = require('../helpers/index');
 
 const env = process.env.NODE_ENV || 'development';
 const config = require(`${__dirname}/config/config.json`)[env];
@@ -14,17 +14,12 @@ if (config.use_env_variable) {
     sequelize = new Sequelize(config.database, config.username, config.password, config);
 }
 
-fs
-    .readdirSync(`${__dirname}/../entries`)
-    .filter(file => (file.slice(-3) !== '.js'))
-    .forEach(folder => {
-        fs.readdirSync(path.join(`${__dirname}/../entries`, folder))
-            .filter(file => file.slice(-8) === 'model.js')
-            .forEach(file => {
-                const model = sequelize.import(path.join(`${__dirname}/../entries/${folder}`, file));
-                db[model.name] = model;
-            });
-        });
+const models = componentsGetter('model');
+
+models.forEach(item => {
+    const model = sequelize.import(path.join(`${__dirname}/../entries/${item.folder}`, item.file));
+    db[model.name] = model;
+});
 
 Object.keys(db).forEach(modelName => {
     if (db[modelName].associate) {
