@@ -8,9 +8,6 @@ function model(sequelize, DataTypes) {
             type: DataTypes.STRING,
             allowNull: false,
         },
-        authToken: {
-            type: DataTypes.STRING,
-        },
     }, {});
 
     User.associate = models => {

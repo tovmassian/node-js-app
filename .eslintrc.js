@@ -9,5 +9,6 @@ module.exports = {
         "no-unused-vars": 0,
         "import/no-dynamic-require": 0,
         "global-require": 0,
+        "no-underscore-dangle": 0,
     }
 };

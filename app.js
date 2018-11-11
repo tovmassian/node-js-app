@@ -11,10 +11,12 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-const routesList = componentsGetter('route');
-routesList.forEach(routeItem => {
-    const routeItemPath = path.join(__dirname, `/server/entries/${routeItem.folder}`, routeItem.file);
-    app.use('/', require(routeItemPath));
+const routes = componentsGetter('route');
+routes.forEach(routeItem => {
+    const entityPath = `/server/entries/${routeItem.folder}`;
+    const routePath = path.join(__dirname, entityPath, routeItem.file);
+
+    app.use('/', require(routePath));
 });
 
 app.listen(port, () => {
