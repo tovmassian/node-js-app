@@ -13,7 +13,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 const routesList = componentsGetter('route');
 routesList.forEach(routeItem => {
-    app.use('/', require(path.join(`${__dirname}/server/entries/${routeItem.folder}`, routeItem.file)));
+    const routeItemPath = path.join(__dirname, `/server/entries/${routeItem.folder}`, routeItem.file);
+    app.use('/', require(routeItemPath));
 });
 
 app.listen(port, () => {
