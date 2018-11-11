@@ -1,43 +1,68 @@
 const bcrypt = require('bcryptjs');
 const { User } = require('../../db/client');
 const authService = require('../../services/authService');
+const { formValidator } = require('../../helpers/index');
+
+function validateToken(req, res, next) {
+    const token = req.headers['x-access-token'];
+
+    authService.validateToken(token)
+        .then(decoded => {
+            req.decoded = decoded;
+            next();
+        })
+        .catch(err => {
+            res.status(403).send({ auth: false, message: err.message });
+        });
+}
 
 function signUp(req, res) {
-    const hashedPassword = bcrypt.hashSync(req.body.password, 8);
+    const { username, password } = req.body;
 
+    if (!formValidator(username, password)) {
+        res.status(406).send('Please input valid characters!');
+        return;
+    }
+    const hashedPassword = bcrypt.hashSync(password, 8);
     User
         .create({
-            username: req.body.username,
+            username,
             password: hashedPassword,
         })
         .then(user => {
             const token = authService.createToken(user._id);
-
             res.status(201).send({ status: 'signed up', auth: true, token });
         })
         .catch(error => res.status(400).send(error));
 }
 
 function signIn(req, res) {
+    const { username, password } = req.body;
+
+    if (!formValidator(username, password)) {
+        res.status(406).send('Please input valid characters!');
+        return;
+    }
     User
         .findOne({
             where: {
-                username: req.body.username,
+                username,
             },
         })
         .then(user => {
-            const passwordIsValid = bcrypt.compareSync(req.body.password, user.password);
-            if (passwordIsValid) {
-                const token = authService.createToken(user._id);
-                res.status(200).send({
-                    status: 'signed in',
-                    auth: true,
-                    token,
-                    user,
-                });
-            } else {
-                res.status(400).send('Your password is incorrect!');
+            const isValidPassword = bcrypt.compareSync(password, user.password);
+            if (!isValidPassword) {
+                res.status(401).send('Your password is incorrect!');
+                return;
             }
+            const token = authService.createToken(user._id);
+
+            res.status(200).send({
+                status: 'signed in',
+                auth: true,
+                token,
+                user,
+            });
         })
         .catch(error => res.status(400).send('User is not found!'));
 }
@@ -56,44 +81,10 @@ function getUsers(req, res) {
         .catch(error => res.status(400).send(error));
 }
 
-function isFieldEmpty(field) {
-    return !field;
-}
-
-function isValidCharacters(field) {
-    return field === field.replace(/[^a-zA-Z0-9]/g, '');
-}
-
-function validateFields(req, res, next) {
-    const { body } = req;
-    if (!isFieldEmpty(body.username)
-    && !isFieldEmpty(body.password)
-    && isValidCharacters(body.username)
-    && isValidCharacters(body.password)) {
-        next();
-    } else {
-        res.send('Don\'t fuck me please\'Sorry but username or password is empty');
-    }
-}
-
-function validateUserToken(req, res, next) {
-    const token = req.headers['x-access-token'];
-
-    authService.validateToken(token)
-        .then(decoded => {
-            req.decoded = decoded;
-            next();
-        })
-        .catch(err => {
-            res.status(500).send({ auth: false, message: err.message });
-        });
-}
-
 module.exports = {
     signUp,
     getUsers,
     getById,
     signIn,
-    validateFields,
-    validateUserToken,
+    validateToken,
 };
