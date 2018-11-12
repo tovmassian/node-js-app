@@ -14,7 +14,7 @@ if (config.use_env_variable) {
     sequelize = new Sequelize(config.database, config.username, config.password, config);
 }
 
-const models = componentsGetter('model');
+const models = componentsGetter('Model');
 
 models.forEach(item => {
     const model = sequelize.import(path.join(`${__dirname}/../entries/${item.folder}`, item.file));

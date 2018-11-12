@@ -11,7 +11,7 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-const routes = componentsGetter('route');
+const routes = componentsGetter('Route');
 routes.forEach(routeItem => {
     const entityPath = `/server/entries/${routeItem.folder}`;
     const routePath = path.join(__dirname, entityPath, routeItem.file);
